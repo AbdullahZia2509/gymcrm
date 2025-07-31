@@ -1,0 +1,119 @@
+// Auth Types
+export const REGISTER_SUCCESS = 'REGISTER_SUCCESS';
+export const REGISTER_FAIL = 'REGISTER_FAIL';
+export const USER_LOADED = 'USER_LOADED';
+export const AUTH_ERROR = 'AUTH_ERROR';
+export const LOGIN_SUCCESS = 'LOGIN_SUCCESS';
+export const LOGIN_FAIL = 'LOGIN_FAIL';
+export const LOGOUT = 'LOGOUT';
+export const CLEAR_ERRORS = 'CLEAR_ERRORS';
+
+// Alert Types
+export const SET_ALERT = 'SET_ALERT';
+export const REMOVE_ALERT = 'REMOVE_ALERT';
+
+// Member Types
+export const GET_MEMBERS = 'GET_MEMBERS';
+export const GET_MEMBER = 'GET_MEMBER';
+export const ADD_MEMBER = 'ADD_MEMBER';
+export const UPDATE_MEMBER = 'UPDATE_MEMBER';
+export const DELETE_MEMBER = 'DELETE_MEMBER';
+export const MEMBER_ERROR = 'MEMBER_ERROR';
+export const CLEAR_MEMBER = 'CLEAR_MEMBER';
+export const FILTER_MEMBERS = 'FILTER_MEMBERS';
+export const CLEAR_FILTER = 'CLEAR_FILTER';
+
+// Membership Types
+export const GET_MEMBERSHIPS = 'GET_MEMBERSHIPS';
+export const GET_MEMBERSHIP = 'GET_MEMBERSHIP';
+export const ADD_MEMBERSHIP = 'ADD_MEMBERSHIP';
+export const UPDATE_MEMBERSHIP = 'UPDATE_MEMBERSHIP';
+export const DELETE_MEMBERSHIP = 'DELETE_MEMBERSHIP';
+export const MEMBERSHIP_ERROR = 'MEMBERSHIP_ERROR';
+export const CLEAR_MEMBERSHIP = 'CLEAR_MEMBERSHIP';
+
+// Payment Types
+export const GET_PAYMENTS = 'GET_PAYMENTS';
+export const GET_PAYMENT = 'GET_PAYMENT';
+export const ADD_PAYMENT = 'ADD_PAYMENT';
+export const UPDATE_PAYMENT = 'UPDATE_PAYMENT';
+export const DELETE_PAYMENT = 'DELETE_PAYMENT';
+export const PAYMENT_ERROR = 'PAYMENT_ERROR';
+export const CLEAR_PAYMENT = 'CLEAR_PAYMENT';
+export const GET_PAYMENT_STATS = 'GET_PAYMENT_STATS';
+
+// Attendance Types
+export const GET_ATTENDANCE = 'GET_ATTENDANCE';
+export const GET_ATTENDANCE_RECORD = 'GET_ATTENDANCE_RECORD';
+export const CHECK_IN = 'CHECK_IN';
+export const CHECK_OUT = 'CHECK_OUT';
+export const DELETE_ATTENDANCE = 'DELETE_ATTENDANCE';
+export const ATTENDANCE_ERROR = 'ATTENDANCE_ERROR';
+export const CLEAR_ATTENDANCE = 'CLEAR_ATTENDANCE';
+export const GET_ACTIVE_ATTENDANCE = 'GET_ACTIVE_ATTENDANCE';
+export const GET_ATTENDANCE_STATS = 'GET_ATTENDANCE_STATS';
+
+// Class Types
+export const GET_CLASSES = 'GET_CLASSES';
+export const GET_CLASS = 'GET_CLASS';
+export const ADD_CLASS = 'ADD_CLASS';
+export const UPDATE_CLASS = 'UPDATE_CLASS';
+export const DELETE_CLASS = 'DELETE_CLASS';
+export const CLASS_ERROR = 'CLASS_ERROR';
+export const CLEAR_CLASS = 'CLEAR_CLASS';
+
+// Class Session Types
+export const GET_SESSIONS = 'GET_SESSIONS';
+export const GET_SESSION = 'GET_SESSION';
+export const ADD_SESSION = 'ADD_SESSION';
+export const UPDATE_SESSION = 'UPDATE_SESSION';
+export const DELETE_SESSION = 'DELETE_SESSION';
+export const SESSION_ERROR = 'SESSION_ERROR';
+export const CLEAR_SESSION = 'CLEAR_SESSION';
+export const ENROLL_MEMBER = 'ENROLL_MEMBER';
+export const REMOVE_MEMBER = 'REMOVE_MEMBER';
+
+// Staff Types
+export const GET_STAFF = 'GET_STAFF';
+export const GET_STAFF_MEMBER = 'GET_STAFF_MEMBER';
+export const ADD_STAFF = 'ADD_STAFF';
+export const UPDATE_STAFF = 'UPDATE_STAFF';
+export const DELETE_STAFF = 'DELETE_STAFF';
+export const STAFF_ERROR = 'STAFF_ERROR';
+export const CLEAR_STAFF = 'CLEAR_STAFF';
+export const GET_TRAINERS = 'GET_TRAINERS';
+
+// User Types
+export const GET_USERS = 'GET_USERS';
+export const GET_USER = 'GET_USER';
+export const ADD_USER = 'ADD_USER';
+export const UPDATE_USER = 'UPDATE_USER';
+export const DELETE_USER = 'DELETE_USER';
+export const USER_ERROR = 'USER_ERROR';
+export const CLEAR_USER = 'CLEAR_USER';
+export const CHANGE_PASSWORD = 'CHANGE_PASSWORD';
+
+// Report Types
+export const GET_REVENUE_REPORT = 'GET_REVENUE_REPORT';
+export const GET_MEMBERSHIP_REPORT = 'GET_MEMBERSHIP_REPORT';
+export const GET_ATTENDANCE_REPORT = 'GET_ATTENDANCE_REPORT';
+export const GET_CLASSES_REPORT = 'GET_CLASSES_REPORT';
+export const SET_REPORT_LOADING = 'SET_REPORT_LOADING';
+export const REPORT_ERROR = 'REPORT_ERROR';
+export const CLEAR_REPORT_ERROR = 'CLEAR_REPORT_ERROR';
+export const CLEAR_CURRENT_REPORT = 'CLEAR_CURRENT_REPORT';
+
+// Settings Types
+export const GET_SETTINGS = 'GET_SETTINGS';
+export const GET_SETTING = 'GET_SETTING';
+export const UPDATE_SETTING = 'UPDATE_SETTING';
+export const SETTINGS_ERROR = 'SETTINGS_ERROR';
+export const SET_SETTINGS_LOADING = 'SET_SETTINGS_LOADING';
+export const INITIALIZE_SETTINGS = 'INITIALIZE_SETTINGS';
+export const CLEAR_SETTINGS_ERROR = 'CLEAR_SETTINGS_ERROR';
+
+// Theme Types
+export const SET_THEME_MODE = 'SET_THEME_MODE';
+export const SET_PRIMARY_COLOR = 'SET_PRIMARY_COLOR';
+export const SET_SECONDARY_COLOR = 'SET_SECONDARY_COLOR';
+export const THEME_LOADED = 'THEME_LOADED';
