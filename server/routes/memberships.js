@@ -125,7 +125,7 @@ router.post(
 // @access  Private
 router.put('/:id', auth, tenant, async (req, res) => {
   try {
-    const membership = await Membership.findOne({
+    let membership = await Membership.findOne({
       _id: req.params.id,
       gym: req.gymId
     });
