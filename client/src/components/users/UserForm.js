@@ -48,17 +48,27 @@ const UserForm = () => {
   const [staffList, setStaffList] = useState([]);
   const [loadingStaff, setLoadingStaff] = useState(false);
 
-  // Check if current user is admin
-  const isAdmin = user && user.role === 'admin';
+  // Check if current user is admin or superadmin
+  const isAdmin = user && (user.role === 'admin' || user.role === 'manager');
+  const isSuperAdmin = user && user.role === 'superadmin';
+
+  // State for gyms list (for superadmin)
+  const [gymsList, setGymsList] = useState([]);
+  const [loadingGyms, setLoadingGyms] = useState(false);
 
   useEffect(() => {
-    if (!isAdmin) {
+    if (!isAdmin && !isSuperAdmin) {
       setAlert('Not authorized to manage users', 'error');
       navigate('/');
       return;
     }
 
     fetchStaffList();
+    
+    // If superadmin, fetch gyms list
+    if (isSuperAdmin) {
+      fetchGymsList();
+    }
 
     if (isEdit) {
       fetchUserData();
@@ -76,6 +86,19 @@ const UserForm = () => {
     } catch (err) {
       setAlert(err.response?.data?.msg || 'Error fetching staff list', 'error');
       setLoadingStaff(false);
+    }
+  };
+
+  // Fetch gyms list for superadmin
+  const fetchGymsList = async () => {
+    try {
+      setLoadingGyms(true);
+      const res = await axios.get('/api/gyms');
+      setGymsList(res.data);
+      setLoadingGyms(false);
+    } catch (err) {
+      setAlert(err.response?.data?.msg || 'Error fetching gyms list', 'error');
+      setLoadingGyms(false);
     }
   };
 
@@ -162,9 +185,19 @@ const UserForm = () => {
         delete submitData.password;
       }
       
-      // Ensure gym is set to the admin's gym for new users
-      if (!isEdit && user && user.gym) {
-        submitData.gym = user.gym;
+      // Ensure gym is set correctly based on user role
+      if (!isEdit) {
+        if (isSuperAdmin) {
+          // For superadmin, use the selected gym
+          if (!submitData.gym) {
+            setAlert('Please select a gym for the user', 'error');
+            setLoading(false);
+            return;
+          }
+        } else if (user && user.gym) {
+          // For admin/manager, use their gym
+          submitData.gym = user.gym;
+        }
       }
       
       if (isEdit) {
@@ -275,6 +308,32 @@ const UserForm = () => {
                 </Select>
               </FormControl>
             </Grid>
+            
+            {/* Gym selection for superadmin */}
+            {isSuperAdmin && (
+              <Grid item xs={12} md={6}>
+                <FormControl fullWidth disabled={loadingGyms} error={!formData.gym && !isEdit}>
+                  <InputLabel>Gym *</InputLabel>
+                  <Select
+                    name="gym"
+                    value={formData.gym || ''}
+                    onChange={handleChange}
+                    label="Gym *"
+                    required
+                  >
+                    <MenuItem value="">Select a gym</MenuItem>
+                    {gymsList.map(gym => (
+                      <MenuItem key={gym._id} value={gym._id}>
+                        {gym.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  <FormHelperText>
+                    {!formData.gym && !isEdit ? 'Gym selection is required' : 'Select the gym this user belongs to'}
+                  </FormHelperText>
+                </FormControl>
+              </Grid>
+            )}
             
             <Grid item xs={12} md={6}>
               <FormControl fullWidth disabled={loadingStaff}>

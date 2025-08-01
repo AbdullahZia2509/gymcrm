@@ -17,14 +17,18 @@ router.get('/stats', auth, async (req, res) => {
   try {
     console.log('Dashboard stats API called');
     
-    // Ensure we have the gym ID from the request
-    if (!req.user || !req.user.gym) {
+    // Check if user is superadmin or has a gym assigned
+    const isSuperAdmin = req.user && req.user.role === 'superadmin';
+    const gymId = req.user && req.user.gym;
+    
+    // For regular users, ensure we have a gym ID
+    if (!isSuperAdmin && !gymId) {
       return res.status(400).json({ msg: 'User gym not found' });
     }
     
-    // Set the gymId from the user's gym
-    const gymId = req.user.gym;
-    console.log('User gym ID:', gymId);
+    console.log('User role:', req.user.role);
+    console.log('Is superadmin:', isSuperAdmin);
+    console.log('User gym ID:', gymId || 'None (superadmin)');
     
     // Get current date in local timezone
     const today = new Date();
@@ -65,41 +69,55 @@ router.get('/stats', auth, async (req, res) => {
     let monthlyExpenses = 0;
     
     try {
-      // Active members count
-      activeMembers = await Member.countDocuments({ 
-        membershipStatus: 'active'
-      });
+      // Active members count - filtered by gym for regular users
+      const memberQuery = { membershipStatus: 'active' };
+      if (!isSuperAdmin) {
+        memberQuery.gym = gymId;
+      }
+      activeMembers = await Member.countDocuments(memberQuery);
       console.log('Active members:', activeMembers);
     } catch (err) {
       console.error('Error fetching active members:', err.message);
     }
     
     try {
-      // Active classes count
-      activeClasses = await Class.countDocuments({ isActive: true });
+      // Active classes count - filtered by gym for regular users
+      const classQuery = { isActive: true };
+      if (!isSuperAdmin) {
+        classQuery.gym = gymId;
+      }
+      activeClasses = await Class.countDocuments(classQuery);
       console.log('Active classes:', activeClasses);
     } catch (err) {
       console.error('Error fetching active classes:', err.message);
     }
     
     try {
-      // Check-ins for today using local timezone dates
-      checkInsToday = await Attendance.countDocuments({
+      // Check-ins for today using local timezone dates - filtered by gym for regular users
+      const attendanceQuery = {
         checkInTime: {
           $gte: startOfDay,
           $lte: endOfDay
         }
-      });
+      };
+      if (!isSuperAdmin) {
+        attendanceQuery.gym = gymId;
+      }
+      checkInsToday = await Attendance.countDocuments(attendanceQuery);
       console.log('Check-ins today:', checkInsToday);
     } catch (err) {
       console.error('Error fetching check-ins:', err.message);
     }
     
     try {
-      // Upcoming sessions (future sessions from now)
-      upcomingSessions = await ClassSession.countDocuments({
+      // Upcoming sessions (future sessions from now) - filtered by gym for regular users
+      const sessionQuery = {
         startTime: { $gte: today }
-      });
+      };
+      if (!isSuperAdmin) {
+        sessionQuery.gym = gymId;
+      }
+      upcomingSessions = await ClassSession.countDocuments(sessionQuery);
       console.log('Upcoming sessions:', upcomingSessions);
     } catch (err) {
       console.error('Error fetching upcoming sessions:', err.message);
@@ -107,25 +125,36 @@ router.get('/stats', auth, async (req, res) => {
     
     try {
       // Total revenue for current month
-      console.log('Querying payments for gym:', gymId);
+      console.log('Querying payments', isSuperAdmin ? 'for all gyms' : `for gym: ${gymId}`);
       
-      // Get all payments for this gym first (for debugging)
-      const allGymPayments = await Payment.find({ gym: gymId });
-      console.log('All gym payments count:', allGymPayments.length);
-      console.log('All gym payments:', JSON.stringify(allGymPayments.map(p => ({ 
+      // Set up payment query - filtered by gym for regular users
+      const paymentQuery = {};
+      if (!isSuperAdmin) {
+        paymentQuery.gym = gymId;
+      }
+      
+      // Get all payments for this gym/all gyms first (for debugging)
+      const allGymPayments = await Payment.find(paymentQuery);
+      console.log('All payments count:', allGymPayments.length);
+      console.log('All payments sample:', JSON.stringify(allGymPayments.slice(0, 5).map(p => ({ 
         id: p._id, 
         amount: p.amount, 
-        date: p.paymentDate
+        date: p.paymentDate,
+        gym: p.gym
       }))));
       
       // Now get current month payments - between first and last day of current month
-      const currentMonthPayments = await Payment.find({
+      const currentMonthQuery = {
         paymentDate: { 
           $gte: firstDayOfMonth,
           $lte: lastDayOfMonth
-        },
-        gym: gymId // Use the correct gymId variable
-      });
+        }
+      };
+      if (!isSuperAdmin) {
+        currentMonthQuery.gym = gymId;
+      }
+      
+      const currentMonthPayments = await Payment.find(currentMonthQuery);
       
       console.log('Current month payments count:', currentMonthPayments.length);
       console.log('Current month payments:', JSON.stringify(currentMonthPayments.map(p => ({ 
@@ -153,26 +182,37 @@ router.get('/stats', auth, async (req, res) => {
       console.log('Current date:', now);
       console.log('First day of month:', firstDayOfMonth);
       
-      // Log the gymId for debugging
-      console.log('Querying expenses for gym:', gymId);
+      // Log query info for debugging
+      console.log('Querying expenses', isSuperAdmin ? 'for all gyms' : `for gym: ${gymId}`);
       
-      // Query all expenses for this gym
-      const allGymExpenses = await Expense.find({ gym: gymId });
-      console.log('All gym expenses count:', allGymExpenses.length);
-      console.log('All gym expenses:', JSON.stringify(allGymExpenses.map(e => ({ 
+      // Set up expense query - filtered by gym for regular users
+      const expenseQuery = {};
+      if (!isSuperAdmin) {
+        expenseQuery.gym = gymId;
+      }
+      
+      // Query all expenses for this gym/all gyms
+      const allGymExpenses = await Expense.find(expenseQuery);
+      console.log('All expenses count:', allGymExpenses.length);
+      console.log('All expenses sample:', JSON.stringify(allGymExpenses.slice(0, 5).map(e => ({ 
         id: e._id, 
         amount: e.amount, 
-        date: e.date
+        date: e.date,
+        gym: e.gym
       }))));
       
       // Total expenses for current month - between first and last day of current month
-      const currentMonthExpenses = await Expense.find({
-        gym: gymId,
+      const currentMonthQuery = {
         date: { 
           $gte: firstDayOfMonth,
           $lte: lastDayOfMonth 
         }
-      });
+      };
+      if (!isSuperAdmin) {
+        currentMonthQuery.gym = gymId;
+      }
+      
+      const currentMonthExpenses = await Expense.find(currentMonthQuery);
       
       console.log('Current month expenses count:', currentMonthExpenses.length);
       console.log('Current month expenses data:', JSON.stringify(currentMonthExpenses.map(e => ({ 
@@ -196,21 +236,28 @@ router.get('/stats', auth, async (req, res) => {
     
     try {
       // Membership growth calculation
-      const prevMonthMembers = await Member.countDocuments({
-        gym: gymId, // Filter by gym
+      // Set up query - filtered by gym for regular users
+      const prevMonthQuery = {
         createdAt: {
           $gte: firstDayOfPrevMonth,
           $lte: lastDayOfPrevMonth
         }
-      });
+      };
       
-      const currentMonthMembers = await Member.countDocuments({
-        gym: gymId, // Filter by gym
+      const currentMonthQuery = {
         createdAt: {
           $gte: firstDayOfMonth,
-          $lte: lastDayOfMonth // Add upper bound
+          $lte: lastDayOfMonth
         }
-      });
+      };
+      
+      if (!isSuperAdmin) {
+        prevMonthQuery.gym = gymId;
+        currentMonthQuery.gym = gymId;
+      }
+      
+      const prevMonthMembers = await Member.countDocuments(prevMonthQuery);
+      const currentMonthMembers = await Member.countDocuments(currentMonthQuery);
       
       console.log('Previous month members:', prevMonthMembers);
       console.log('Current month members:', currentMonthMembers);
@@ -230,7 +277,8 @@ router.get('/stats', auth, async (req, res) => {
       const todayMoment = moment().startOf('day');
       const sevenDaysFromNow = moment().add(7, 'days').endOf('day');
       
-      feesDueCount = await Member.countDocuments({
+      // Build the query
+      const feesDueQuery = {
         $or: [
           // Case 1: Membership ending within 7 days
           {
@@ -246,7 +294,18 @@ router.get('/stats', auth, async (req, res) => {
             membershipStatus: 'active'
           }
         ]
-      });
+      };
+      
+      // Add gym filter for non-superadmin users
+      if (!isSuperAdmin) {
+        // We need to add gym filter to each condition in the $or array
+        feesDueQuery.$or = feesDueQuery.$or.map(condition => ({
+          ...condition,
+          gym: gymId
+        }));
+      }
+      
+      feesDueCount = await Member.countDocuments(feesDueQuery);
       
       console.log('Members with fees due:', feesDueCount);
     } catch (err) {

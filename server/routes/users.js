@@ -27,8 +27,8 @@ router.post(
       return res.status(400).json({ errors: errors.array() });
     }
 
-    // Check if user is admin
-    if (req.user.role !== 'admin' && req.user.role !== 'manager') {
+    // Check if user is superadmin, admin, or manager
+    if (req.user.role !== 'superadmin' && req.user.role !== 'admin' && req.user.role !== 'manager') {
       return res.status(403).json({ msg: 'Not authorized to create users' });
     }
 
@@ -50,6 +50,11 @@ router.post(
         }
       }
 
+      // If superadmin is creating a user, a gym must be specified
+      if (req.user.role === 'superadmin' && !gym) {
+        return res.status(400).json({ msg: 'Gym ID is required when superadmin creates a user' });
+      }
+
       user = new User({
         name,
         email,
@@ -57,8 +62,8 @@ router.post(
         role,
         staff,
         avatar,
-        // If gym is provided in request, use it; otherwise use the admin's gym
-        gym: gym || req.user.gym,
+        // If superadmin, use provided gym. Otherwise, use provided gym or admin's gym
+        gym: req.user.role === 'superadmin' ? gym : (gym || req.user.gym),
         isActive: true
       });
 
@@ -99,8 +104,8 @@ router.post(
 // @desc    Get all users
 // @access  Private/Admin
 router.get('/', auth, async (req, res) => {
-  // Check if user is admin or manager
-  if (req.user.role !== 'admin' && req.user.role !== 'manager') {
+  // Check if user is admin, manager, or superadmin
+  if (req.user.role !== 'admin' && req.user.role !== 'manager' && req.user.role !== 'superadmin') {
     return res.status(403).json({ msg: 'Not authorized to view all users' });
   }
 

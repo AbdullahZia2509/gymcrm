@@ -94,6 +94,7 @@ const Sidebar = ({ open, drawerWidth }) => {
       icon: <SupervisorAccountIcon />,
       path: "/users",
       showAdmin: true,
+      showSuperAdmin: true,
     },
     {
       text: "Reports",

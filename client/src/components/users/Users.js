@@ -50,12 +50,13 @@ const Users = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [statusDialog, setStatusDialog] = useState(false);
 
-  // Check if current user is admin
-  const isAdmin = user && user.role === 'admin';
-  const isManager = user && (user.role === 'admin' || user.role === 'manager');
+  // Check if current user is admin, manager, or superadmin
+  const isSuperAdmin = user && user.role === 'superadmin';
+  const isAdmin = user && (user.role === 'admin' || isSuperAdmin);
+  const isManager = user && (user.role === 'admin' || user.role === 'manager' || isSuperAdmin);
 
   useEffect(() => {
-    if (!isManager) {
+    if (!isManager && !isSuperAdmin) {
       setAlert('Not authorized to view users', 'error');
       navigate('/');
       return;
@@ -191,7 +192,7 @@ const Users = () => {
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4">Users</Typography>
-        {isAdmin && (
+        {(isAdmin || isSuperAdmin) && (
           <Button
             variant="contained"
             color="primary"
@@ -255,7 +256,7 @@ const Users = () => {
                   <TableCell>{new Date(user.createdAt).toLocaleDateString()}</TableCell>
                   <TableCell align="right">
                     <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                      {isAdmin && (
+                      {(isAdmin || isSuperAdmin) && (
                         <>
                           <IconButton 
                             color="primary" 
