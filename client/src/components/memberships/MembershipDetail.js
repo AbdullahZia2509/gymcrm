@@ -95,7 +95,7 @@ const MembershipDetail = () => {
   // Handle form input change
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
+
     // Handle nested objects
     if (name.includes(".")) {
       const [parent, child] = name.split(".");
@@ -124,7 +124,7 @@ const MembershipDetail = () => {
   const handleNumericChange = (e) => {
     const { name, value } = e.target;
     const numValue = value === "" ? 0 : parseFloat(value);
-    
+
     setMembership({
       ...membership,
       [name]: numValue,
@@ -134,12 +134,12 @@ const MembershipDetail = () => {
   // Add feature
   const addFeature = () => {
     if (newFeature.trim() === "") return;
-    
+
     setMembership({
       ...membership,
       features: [...membership.features, newFeature.trim()],
     });
-    
+
     setNewFeature("");
   };
 
@@ -147,7 +147,7 @@ const MembershipDetail = () => {
   const removeFeature = (index) => {
     const updatedFeatures = [...membership.features];
     updatedFeatures.splice(index, 1);
-    
+
     setMembership({
       ...membership,
       features: updatedFeatures,
@@ -157,13 +157,16 @@ const MembershipDetail = () => {
   // Validate form
   const validateForm = () => {
     const newErrors = {};
-    
+
     if (!membership.name.trim()) newErrors.name = "Name is required";
-    if (!membership.description.trim()) newErrors.description = "Description is required";
+    if (!membership.description.trim())
+      newErrors.description = "Description is required";
     if (!membership.price) newErrors.price = "Price is required";
-    if (!membership.duration.value) newErrors.durationValue = "Duration value is required";
-    if (!membership.duration.unit) newErrors.durationUnit = "Duration unit is required";
-    
+    if (!membership.duration.value)
+      newErrors.durationValue = "Duration value is required";
+    if (!membership.duration.unit)
+      newErrors.durationUnit = "Duration unit is required";
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -171,15 +174,15 @@ const MembershipDetail = () => {
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       setAlert("Please fix the errors in the form", "error");
       return;
     }
-    
+
     try {
       let res;
-      
+
       if (isNew) {
         res = await axios.post("/api/memberships", membership);
         setAlert("Membership created successfully", "success");
@@ -187,11 +190,12 @@ const MembershipDetail = () => {
         res = await axios.put(`/api/memberships/${id}`, membership);
         setAlert("Membership updated successfully", "success");
       }
-      
+
       navigate(`/memberships/${res.data._id}`);
     } catch (err) {
       setAlert(
-        err.response?.data?.msg || `Error ${isNew ? "creating" : "updating"} membership`,
+        err.response?.data?.msg ||
+          `Error ${isNew ? "creating" : "updating"} membership`,
         "error"
       );
     }
@@ -204,10 +208,7 @@ const MembershipDetail = () => {
       setAlert("Membership deleted successfully", "success");
       navigate("/memberships");
     } catch (err) {
-      setAlert(
-        err.response?.data?.msg || "Error deleting membership",
-        "error"
-      );
+      setAlert(err.response?.data?.msg || "Error deleting membership", "error");
     }
   };
 
@@ -282,7 +283,9 @@ const MembershipDetail = () => {
                   />
                 }
                 label={
-                  membership.isActive ? "Active Membership" : "Inactive Membership"
+                  membership.isActive
+                    ? "Active Membership"
+                    : "Inactive Membership"
                 }
               />
             </Grid>
@@ -309,7 +312,9 @@ const MembershipDetail = () => {
                 error={!!errors.price}
                 helperText={errors.price}
                 InputProps={{
-                  startAdornment: <InputAdornment position="start">$</InputAdornment>,
+                  startAdornment: (
+                    <InputAdornment position="start">Rs.</InputAdornment>
+                  ),
                 }}
                 required
               />
@@ -401,7 +406,9 @@ const MembershipDetail = () => {
                 onChange={handleNumericChange}
                 helperText="Discount percentage on additional services"
                 InputProps={{
-                  endAdornment: <InputAdornment position="end">%</InputAdornment>,
+                  endAdornment: (
+                    <InputAdornment position="end">%</InputAdornment>
+                  ),
                 }}
               />
             </Grid>
@@ -460,8 +467,8 @@ const MembershipDetail = () => {
         <DialogTitle>Delete Membership</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to delete {membership.name}?
-            This action cannot be undone.
+            Are you sure you want to delete {membership.name}? This action
+            cannot be undone.
           </DialogContentText>
         </DialogContent>
         <DialogActions>

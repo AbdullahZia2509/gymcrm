@@ -1,5 +1,10 @@
 import React, { useState, useEffect, useContext } from "react";
-import { useParams, useNavigate, Link, Link as RouterLink } from "react-router-dom";
+import {
+  useParams,
+  useNavigate,
+  Link,
+  Link as RouterLink,
+} from "react-router-dom";
 import axios from "axios";
 import {
   Box,
@@ -60,18 +65,18 @@ const StaffDetail = () => {
   const isNew = id === "new" || window.location.pathname.includes("/new");
   const isEdit = window.location.pathname.includes("/edit");
   const isReadOnly = !isNew && !isEdit;
-  
+
   console.log("StaffDetail state:", {
     id,
     isNew,
     isEdit,
     isReadOnly,
-    path: window.location.pathname
+    path: window.location.pathname,
   });
 
   // Check if user has permission to modify staff
   const canModify = user && (user.role === "admin" || user.role === "manager");
-  console.log('User object:', user, 'canModify:', canModify);
+  console.log("User object:", user, "canModify:", canModify);
 
   const [staffData, setStaffData] = useState({
     firstName: "",
@@ -387,7 +392,8 @@ const StaffDetail = () => {
               Access Denied
             </Typography>
             <Typography variant="body1">
-              You do not have permission to {isNew ? "create" : "edit"} staff members.
+              You do not have permission to {isNew ? "create" : "edit"} staff
+              members.
             </Typography>
             <Button
               component={RouterLink}
@@ -402,7 +408,7 @@ const StaffDetail = () => {
       </Container>
     );
   }
-  
+
   return (
     <Container maxWidth="lg">
       <Box sx={{ mt: 4, mb: 4 }}>
@@ -663,7 +669,14 @@ const StaffDetail = () => {
 
                 {(isEdit || isNew) && (
                   <Grid item xs={12}>
-                    <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 2, mt: 3 }}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent: "flex-end",
+                        gap: 2,
+                        mt: 3,
+                      }}
+                    >
                       <Button
                         component={RouterLink}
                         to={isNew ? "/staff" : `/staff/${id}`}
@@ -677,7 +690,13 @@ const StaffDetail = () => {
                         color="primary"
                         type="submit"
                         disabled={submitting}
-                        startIcon={submitting ? <LoadingSpinner size={20} /> : <SaveIcon />}
+                        startIcon={
+                          submitting ? (
+                            <LoadingSpinner size={20} />
+                          ) : (
+                            <SaveIcon />
+                          )
+                        }
                       >
                         {isNew ? "Create Staff Member" : "Save Changes"}
                       </Button>
@@ -831,7 +850,7 @@ const StaffDetail = () => {
                       disabled={isReadOnly}
                       InputProps={{
                         startAdornment: (
-                          <span style={{ marginRight: 8 }}>$</span>
+                          <span style={{ marginRight: 8 }}>Rs.</span>
                         ),
                       }}
                     />

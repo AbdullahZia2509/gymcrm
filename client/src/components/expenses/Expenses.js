@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useContext } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Box,
   Typography,
@@ -25,8 +25,8 @@ import {
   FormControl,
   InputLabel,
   Select,
-  Grid
-} from '@mui/material';
+  Grid,
+} from "@mui/material";
 import {
   Add as AddIcon,
   Edit as EditIcon,
@@ -34,12 +34,12 @@ import {
   Search as SearchIcon,
   FilterList as FilterIcon,
   AttachMoney as MoneyIcon,
-  Receipt as ReceiptIcon
-} from '@mui/icons-material';
-import { DatePicker } from '@mui/x-date-pickers';
-import AuthContext from '../../context/auth/authContext';
-import AlertContext from '../../context/alert/alertContext';
-import axios from 'axios';
+  Receipt as ReceiptIcon,
+} from "@mui/icons-material";
+import { DatePicker } from "@mui/x-date-pickers";
+import AuthContext from "../../context/auth/authContext";
+import AlertContext from "../../context/alert/alertContext";
+import axios from "axios";
 
 const Expenses = () => {
   const authContext = useContext(AuthContext);
@@ -52,20 +52,24 @@ const Expenses = () => {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [deleteDialog, setDeleteDialog] = useState(false);
   const [currentExpense, setCurrentExpense] = useState(null);
   const [filterOpen, setFilterOpen] = useState(false);
   const [filters, setFilters] = useState({
-    category: '',
-    status: '',
+    category: "",
+    status: "",
     startDate: null,
-    endDate: null
+    endDate: null,
   });
 
   // Check if current user is admin or manager
-  const isAdmin = user && (user.role === 'admin' || user.role === 'superadmin');
-  const isManager = user && (user.role === 'admin' || user.role === 'manager' || user.role === 'superadmin');
+  const isAdmin = user && (user.role === "admin" || user.role === "superadmin");
+  const isManager =
+    user &&
+    (user.role === "admin" ||
+      user.role === "manager" ||
+      user.role === "superadmin");
 
   useEffect(() => {
     fetchExpenses();
@@ -75,21 +79,24 @@ const Expenses = () => {
   const fetchExpenses = async () => {
     try {
       setLoading(true);
-      
+
       // Build query string for filters
       let queryParams = [];
       if (filters.category) queryParams.push(`category=${filters.category}`);
       if (filters.status) queryParams.push(`status=${filters.status}`);
-      if (filters.startDate) queryParams.push(`startDate=${filters.startDate.toISOString()}`);
-      if (filters.endDate) queryParams.push(`endDate=${filters.endDate.toISOString()}`);
-      
-      const queryString = queryParams.length > 0 ? `?${queryParams.join('&')}` : '';
-      
+      if (filters.startDate)
+        queryParams.push(`startDate=${filters.startDate.toISOString()}`);
+      if (filters.endDate)
+        queryParams.push(`endDate=${filters.endDate.toISOString()}`);
+
+      const queryString =
+        queryParams.length > 0 ? `?${queryParams.join("&")}` : "";
+
       const res = await axios.get(`/api/expenses${queryString}`);
       setExpenses(res.data);
       setLoading(false);
     } catch (err) {
-      setAlert(err.response?.data?.msg || 'Error fetching expenses', 'error');
+      setAlert(err.response?.data?.msg || "Error fetching expenses", "error");
       setLoading(false);
     }
   };
@@ -109,7 +116,7 @@ const Expenses = () => {
   };
 
   const handleAddExpense = () => {
-    navigate('/expenses/new');
+    navigate("/expenses/new");
   };
 
   const handleEditExpense = (expenseId) => {
@@ -135,11 +142,11 @@ const Expenses = () => {
 
     try {
       await axios.delete(`/api/expenses/${currentExpense._id}`);
-      setAlert('Expense deleted successfully', 'success');
+      setAlert("Expense deleted successfully", "success");
       fetchExpenses();
       closeDeleteDialog();
     } catch (err) {
-      setAlert(err.response?.data?.msg || 'Error deleting expense', 'error');
+      setAlert(err.response?.data?.msg || "Error deleting expense", "error");
       closeDeleteDialog();
     }
   };
@@ -147,14 +154,14 @@ const Expenses = () => {
   const handleFilterChange = (e) => {
     setFilters({
       ...filters,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
   };
 
   const handleDateChange = (name, date) => {
     setFilters({
       ...filters,
-      [name]: date
+      [name]: date,
     });
   };
 
@@ -165,70 +172,80 @@ const Expenses = () => {
 
   const clearFilters = () => {
     setFilters({
-      category: '',
-      status: '',
+      category: "",
+      status: "",
       startDate: null,
-      endDate: null
+      endDate: null,
     });
     fetchExpenses();
     setFilterOpen(false);
   };
 
   // Filter expenses based on search term
-  const filteredExpenses = expenses.filter(expense => 
-    expense.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    expense.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (expense.description && expense.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (expense.paidTo && expense.paidTo.toLowerCase().includes(searchTerm.toLowerCase()))
+  const filteredExpenses = expenses.filter(
+    (expense) =>
+      expense.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      expense.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (expense.description &&
+        expense.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (expense.paidTo &&
+        expense.paidTo.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   // Format currency
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
+    return new Intl.NumberFormat("en-PK", {
+      style: "currency",
+      currency: "PKR",
     }).format(amount);
   };
 
   // Get category color
   const getCategoryColor = (category) => {
     switch (category) {
-      case 'salary':
-        return 'primary';
-      case 'bills':
-        return 'secondary';
-      case 'maintenance':
-        return 'warning';
-      case 'equipment':
-        return 'info';
-      case 'rent':
-        return 'error';
-      case 'supplies':
-        return 'success';
-      case 'marketing':
-        return 'default';
+      case "salary":
+        return "primary";
+      case "bills":
+        return "secondary";
+      case "maintenance":
+        return "warning";
+      case "equipment":
+        return "info";
+      case "rent":
+        return "error";
+      case "supplies":
+        return "success";
+      case "marketing":
+        return "default";
       default:
-        return 'default';
+        return "default";
     }
   };
 
   // Get status color
   const getStatusColor = (status) => {
     switch (status) {
-      case 'paid':
-        return 'success';
-      case 'pending':
-        return 'warning';
-      case 'cancelled':
-        return 'error';
+      case "paid":
+        return "success";
+      case "pending":
+        return "warning";
+      case "cancelled":
+        return "error";
       default:
-        return 'default';
+        return "default";
     }
   };
 
   return (
     <Box sx={{ p: 2 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 3,
+        }}
+      >
         <Typography variant="h4">Expenses</Typography>
         <Box>
           <Button
@@ -265,7 +282,7 @@ const Expenses = () => {
                 <InputAdornment position="start">
                   <SearchIcon />
                 </InputAdornment>
-              )
+              ),
             }}
           />
         </Box>
@@ -295,41 +312,49 @@ const Expenses = () => {
               filteredExpenses
                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                 .map((expense) => (
-                  <TableRow 
+                  <TableRow
                     key={expense._id}
                     hover
                     onClick={() => handleViewExpense(expense._id)}
-                    sx={{ cursor: 'pointer' }}
+                    sx={{ cursor: "pointer" }}
                   >
                     <TableCell>
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <MoneyIcon sx={{ mr: 1, color: 'text.secondary' }} />
+                      <Box sx={{ display: "flex", alignItems: "center" }}>
+                        <MoneyIcon sx={{ mr: 1, color: "text.secondary" }} />
                         {expense.title}
                       </Box>
                     </TableCell>
                     <TableCell>
-                      <Chip 
-                        label={expense.category.charAt(0).toUpperCase() + expense.category.slice(1)} 
+                      <Chip
+                        label={
+                          expense.category.charAt(0).toUpperCase() +
+                          expense.category.slice(1)
+                        }
                         color={getCategoryColor(expense.category)}
                         size="small"
                       />
                     </TableCell>
                     <TableCell>{formatCurrency(expense.amount)}</TableCell>
-                    <TableCell>{new Date(expense.date).toLocaleDateString()}</TableCell>
                     <TableCell>
-                      <Chip 
-                        label={expense.status.charAt(0).toUpperCase() + expense.status.slice(1)} 
+                      {new Date(expense.date).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={
+                          expense.status.charAt(0).toUpperCase() +
+                          expense.status.slice(1)
+                        }
                         color={getStatusColor(expense.status)}
                         size="small"
                       />
                     </TableCell>
-                    <TableCell>{expense.paidTo || 'N/A'}</TableCell>
+                    <TableCell>{expense.paidTo || "N/A"}</TableCell>
                     <TableCell align="right">
-                      <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                      <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
                         {isManager && (
                           <>
-                            <IconButton 
-                              color="primary" 
+                            <IconButton
+                              color="primary"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleEditExpense(expense._id);
@@ -337,8 +362,8 @@ const Expenses = () => {
                             >
                               <EditIcon />
                             </IconButton>
-                            <IconButton 
-                              color="error" 
+                            <IconButton
+                              color="error"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 openDeleteDialog(expense);
@@ -349,11 +374,11 @@ const Expenses = () => {
                           </>
                         )}
                         {expense.receiptImage && (
-                          <IconButton 
-                            color="info" 
+                          <IconButton
+                            color="info"
                             onClick={(e) => {
                               e.stopPropagation();
-                              window.open(expense.receiptImage, '_blank');
+                              window.open(expense.receiptImage, "_blank");
                             }}
                           >
                             <ReceiptIcon />
@@ -429,7 +454,7 @@ const Expenses = () => {
               <DatePicker
                 label="Start Date"
                 value={filters.startDate}
-                onChange={(date) => handleDateChange('startDate', date)}
+                onChange={(date) => handleDateChange("startDate", date)}
                 renderInput={(params) => <TextField {...params} fullWidth />}
               />
             </Grid>
@@ -437,7 +462,7 @@ const Expenses = () => {
               <DatePicker
                 label="End Date"
                 value={filters.endDate}
-                onChange={(date) => handleDateChange('endDate', date)}
+                onChange={(date) => handleDateChange("endDate", date)}
                 renderInput={(params) => <TextField {...params} fullWidth />}
               />
             </Grid>
@@ -445,25 +470,23 @@ const Expenses = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={clearFilters}>Clear</Button>
-          <Button onClick={applyFilters} variant="contained">Apply</Button>
+          <Button onClick={applyFilters} variant="contained">
+            Apply
+          </Button>
         </DialogActions>
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog
-        open={deleteDialog}
-        onClose={closeDeleteDialog}
-      >
+      <Dialog open={deleteDialog} onClose={closeDeleteDialog}>
         <DialogTitle>Confirm Delete</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to delete expense "{currentExpense?.title}"? This action cannot be undone.
+            Are you sure you want to delete expense "{currentExpense?.title}"?
+            This action cannot be undone.
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={closeDeleteDialog}>
-            Cancel
-          </Button>
+          <Button onClick={closeDeleteDialog}>Cancel</Button>
           <Button onClick={handleDeleteExpense} color="error">
             Delete
           </Button>

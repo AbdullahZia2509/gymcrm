@@ -277,7 +277,7 @@ const ExpenseDetail = () => {
                 required
                 InputProps={{
                   startAdornment: (
-                    <InputAdornment position="start">$</InputAdornment>
+                    <InputAdornment position="start">Rs.</InputAdornment>
                   ),
                 }}
               />

@@ -111,9 +111,9 @@ const Dashboard = () => {
   const formatCurrency = (amount) => {
     // Ensure amount is a valid number
     const validAmount = Number(amount) || 0;
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat("en-PK", {
       style: "currency",
-      currency: "USD",
+      currency: "PKR",
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(validAmount);
@@ -194,8 +194,8 @@ const Dashboard = () => {
         }));
 
         // Log the stats data for debugging
-        console.log('Dashboard stats from API:', stats);
-        
+        console.log("Dashboard stats from API:", stats);
+
         setData({
           stats: {
             activeMembers: stats.activeMembers || 0,
@@ -333,11 +333,7 @@ const Dashboard = () => {
             </Grid>
             <Grid item xs={12} sm={6} md={4} lg={2}>
               <StatCard
-                icon={
-                  <MoneyOffIcon
-                    sx={{ fontSize: 40, color: "#f44336" }}
-                  />
-                }
+                icon={<MoneyOffIcon sx={{ fontSize: 40, color: "#f44336" }} />}
                 title="Monthly Expenses"
                 value={formatCurrency(data.stats.monthlyExpenses)}
                 color="#f44336"
