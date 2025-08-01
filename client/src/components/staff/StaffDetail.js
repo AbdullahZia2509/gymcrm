@@ -66,17 +66,8 @@ const StaffDetail = () => {
   const isEdit = window.location.pathname.includes("/edit");
   const isReadOnly = !isNew && !isEdit;
 
-  console.log("StaffDetail state:", {
-    id,
-    isNew,
-    isEdit,
-    isReadOnly,
-    path: window.location.pathname,
-  });
-
   // Check if user has permission to modify staff
   const canModify = user && (user.role === "admin" || user.role === "manager");
-  console.log("User object:", user, "canModify:", canModify);
 
   const [staffData, setStaffData] = useState({
     firstName: "",
@@ -118,18 +109,14 @@ const StaffDetail = () => {
   const [specialization, setSpecialization] = useState("");
 
   useEffect(() => {
-    console.log("StaffDetail useEffect - id:", id, "isNew:", isNew);
-
     // For new staff, just set loading to false
     if (isNew) {
-      console.log("New staff member, skipping data loading");
       setLoading(false);
     } else if (id) {
       // For existing staff, load data
       loadData();
     } else {
       // Fallback
-      console.log("No id provided, setting loading to false");
       setLoading(false);
     }
 
@@ -138,19 +125,16 @@ const StaffDetail = () => {
 
   const loadData = async () => {
     try {
-      console.log("Loading staff data for ID:", id);
       setLoading(true);
 
       // Skip API call for new staff member
       if (isNew) {
-        console.log("New staff member, skipping API call");
         setLoading(false);
         return;
       }
 
       const res = await axios.get(`/api/staff/${id}`);
       const staffMember = res.data;
-      console.log("Staff data loaded:", staffMember);
 
       setStaffData({
         firstName: staffMember.firstName || "",
@@ -189,8 +173,6 @@ const StaffDetail = () => {
 
       setLoading(false);
     } catch (err) {
-      console.error("Error loading staff data:", err);
-
       if (err.response?.status === 404) {
         setAlert("Staff member not found", "error");
         navigate("/staff");

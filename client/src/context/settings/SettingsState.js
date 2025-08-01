@@ -1,8 +1,8 @@
-import React, { useReducer, useContext } from 'react';
-import axios from 'axios';
-import SettingsContext from './settingsContext';
-import settingsReducer from './settingsReducer';
-import AlertContext from '../alert/alertContext';
+import React, { useReducer, useContext } from "react";
+import axios from "axios";
+import SettingsContext from "./settingsContext";
+import settingsReducer from "./settingsReducer";
+import AlertContext from "../alert/alertContext";
 import {
   GET_SETTINGS,
   GET_SETTING,
@@ -10,16 +10,16 @@ import {
   SETTINGS_ERROR,
   SET_SETTINGS_LOADING,
   INITIALIZE_SETTINGS,
-  CLEAR_SETTINGS_ERROR
-} from '../types';
+  CLEAR_SETTINGS_ERROR,
+} from "../types";
 
-const SettingsState = props => {
+const SettingsState = (props) => {
   const initialState = {
     settings: null,
     currentSetting: null,
     loading: false,
     error: null,
-    initialized: false
+    initialized: false,
   };
 
   const [state, dispatch] = useReducer(settingsReducer, initialState);
@@ -30,23 +30,24 @@ const SettingsState = props => {
   const getSettings = async () => {
     try {
       setLoading();
-      console.log('Fetching settings...');
-      const res = await axios.get('/api/settings');
-      console.log('Settings fetched:', res.data);
-      
+      const res = await axios.get("/api/settings");
+
       dispatch({
         type: GET_SETTINGS,
-        payload: res.data
+        payload: res.data,
       });
       return res.data;
     } catch (err) {
-      console.error('Error fetching settings:', err);
-      const errorMessage = err.response?.data?.msg || 
-                          (err.response ? `Server error: ${err.response.status}` : 'Network error');
-      
+      console.error("Error fetching settings:", err);
+      const errorMessage =
+        err.response?.data?.msg ||
+        (err.response
+          ? `Server error: ${err.response.status}`
+          : "Network error");
+
       dispatch({
         type: SETTINGS_ERROR,
-        payload: errorMessage
+        payload: errorMessage,
       });
       throw err;
     }
@@ -57,41 +58,43 @@ const SettingsState = props => {
     try {
       setLoading();
       const res = await axios.get(`/api/settings/${key}`);
-      
+
       dispatch({
         type: GET_SETTING,
-        payload: res.data
+        payload: res.data,
       });
     } catch (err) {
       dispatch({
         type: SETTINGS_ERROR,
-        payload: err.response?.data?.msg || 'Error fetching setting'
+        payload: err.response?.data?.msg || "Error fetching setting",
       });
     }
   };
-  
+
   // Update a setting
   const updateSetting = async (key, settingData) => {
     try {
       setLoading();
-      console.log(`Updating setting ${key} with:`, settingData);
-      
+
       // Make sure settingData is properly formatted with a value property
-      const dataToSend = typeof settingData === 'object' && settingData !== null && 'value' in settingData
-        ? settingData
-        : { value: settingData };
-      
-      console.log('Sending data to API:', dataToSend);
+      const dataToSend =
+        typeof settingData === "object" &&
+        settingData !== null &&
+        "value" in settingData
+          ? settingData
+          : { value: settingData };
+
       const res = await axios.put(`/api/settings/${key}`, dataToSend);
-      console.log('API response:', res.data);
-      
+
       // Make sure we have the category information for the reducer
       if (!res.data.category) {
-        console.error('Response data missing category:', res.data);
+        console.error("Response data missing category:", res.data);
         // Try to find the setting in our current state to get its category
         if (state.settings) {
           for (const category in state.settings) {
-            const foundSetting = state.settings[category].find(s => s.key === key);
+            const foundSetting = state.settings[category].find(
+              (s) => s.key === key
+            );
             if (foundSetting) {
               res.data.category = foundSetting.category;
               break;
@@ -99,25 +102,27 @@ const SettingsState = props => {
           }
         }
       }
-      
-      console.log('Dispatching update with:', res.data);
+
       dispatch({
         type: UPDATE_SETTING,
-        payload: res.data
+        payload: res.data,
       });
-      
-      setAlert(`Setting '${key}' updated successfully`, 'success');
+
+      setAlert(`Setting '${key}' updated successfully`, "success");
       return true;
     } catch (err) {
-      console.error('Error updating setting:', err);
-      const errorMessage = err.response?.data?.msg || 
-                          (err.response ? `Server error: ${err.response.status}` : 'Network error');
-      
+      console.error("Error updating setting:", err);
+      const errorMessage =
+        err.response?.data?.msg ||
+        (err.response
+          ? `Server error: ${err.response.status}`
+          : "Network error");
+
       dispatch({
         type: SETTINGS_ERROR,
-        payload: errorMessage
+        payload: errorMessage,
       });
-      setAlert(errorMessage, 'error');
+      setAlert(errorMessage, "error");
       return false;
     }
   };
@@ -128,29 +133,30 @@ const SettingsState = props => {
   const initializeSettings = async () => {
     try {
       setLoading();
-      console.log('Initializing settings...');
-      const res = await axios.post('/api/settings/initialize');
-      console.log('Settings initialized:', res.data);
-      
+      const res = await axios.post("/api/settings/initialize");
+
       // After initializing, fetch the settings again
       await getSettings();
-      
+
       dispatch({
-        type: INITIALIZE_SETTINGS
+        type: INITIALIZE_SETTINGS,
       });
 
-      setAlert('Settings initialized successfully', 'success');
+      setAlert("Settings initialized successfully", "success");
       return true;
     } catch (err) {
-      console.error('Error initializing settings:', err);
-      const errorMessage = err.response?.data?.msg || 
-                          (err.response ? `Server error: ${err.response.status}` : 'Network error');
-      
+      console.error("Error initializing settings:", err);
+      const errorMessage =
+        err.response?.data?.msg ||
+        (err.response
+          ? `Server error: ${err.response.status}`
+          : "Network error");
+
       dispatch({
         type: SETTINGS_ERROR,
-        payload: errorMessage
+        payload: errorMessage,
       });
-      setAlert(errorMessage, 'error');
+      setAlert(errorMessage, "error");
       return false;
     }
   };
@@ -173,7 +179,7 @@ const SettingsState = props => {
         getSetting,
         updateSetting,
         initializeSettings,
-        clearErrors
+        clearErrors,
       }}
     >
       {props.children}

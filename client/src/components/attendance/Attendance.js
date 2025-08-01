@@ -86,12 +86,7 @@ const Attendance = () => {
         params.append("date", dateFilter);
       }
 
-      console.log(
-        "Fetching attendance records with params:",
-        params.toString()
-      );
       const response = await axios.get(`/api/attendance?${params.toString()}`);
-      console.log("API Response:", response.data);
 
       // Check the structure of the response
       let records = [];
@@ -99,7 +94,6 @@ const Attendance = () => {
         // If response is an array, use it directly
         records = response.data;
         setTotalCount(records.length);
-        console.log("Response is an array with", records.length, "records");
       } else if (
         response.data.attendance &&
         Array.isArray(response.data.attendance)
@@ -107,20 +101,13 @@ const Attendance = () => {
         // If response has attendance property that is an array
         records = response.data.attendance;
         setTotalCount(response.data.total || records.length);
-        console.log(
-          "Response has attendance array with",
-          records.length,
-          "records"
-        );
       } else if (response.data.data && Array.isArray(response.data.data)) {
         // If response has data property that is an array
         records = response.data.data;
         setTotalCount(
           response.data.total || response.data.count || records.length
         );
-        console.log("Response has data array with", records.length, "records");
       } else {
-        console.error("Unexpected API response structure:", response.data);
         records = [];
         setTotalCount(0);
       }
@@ -164,7 +151,6 @@ const Attendance = () => {
     }
 
     try {
-      console.log("Checking out attendance record with ID:", id);
       await axios.put(`/api/attendance/checkout/${id}`);
       setAlert("Member checked out successfully", "success");
       loadAttendanceRecords();
@@ -211,11 +197,6 @@ const Attendance = () => {
     setRecordToDelete(null);
   };
 
-  // Log attendance records for debugging
-  useEffect(() => {
-    console.log("Current attendance records:", attendanceRecords);
-  }, [attendanceRecords]);
-
   // Filter records based on search term
   const filteredRecords = attendanceRecords.filter((record) => {
     if (!searchTerm) return true;
@@ -244,11 +225,6 @@ const Attendance = () => {
       memberPhone.includes(searchTermLower)
     );
   });
-
-  // Log filtered records for debugging
-  useEffect(() => {
-    console.log("Filtered records:", filteredRecords);
-  }, [filteredRecords]);
 
   // Format date for display
   const formatDate = (dateString) => {

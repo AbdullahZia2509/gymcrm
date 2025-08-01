@@ -133,11 +133,9 @@ const MemberDetail = () => {
           : "",
       };
 
-      console.log("Formatted member:", formattedMember);
       setMember(formattedMember);
       setLoading(false);
     } catch (err) {
-      console.error("Error fetching member:", err);
       setAlert(
         err.response?.data?.msg || "Error fetching member details",
         "error"
@@ -251,12 +249,18 @@ const MemberDetail = () => {
 
             // Create a new custom membership plan
             const customMembershipData = {
-              name: `Custom Plan - ${parseFloat(memberData.customFee).toFixed(2)}`,
-              description: `Custom membership plan with fee of ${parseFloat(memberData.customFee).toFixed(2)}`,
+              name: `Custom Plan - ${parseFloat(memberData.customFee).toFixed(
+                2
+              )}`,
+              description: `Custom membership plan with fee of ${parseFloat(
+                memberData.customFee
+              ).toFixed(2)}`,
               price: parseFloat(memberData.customFee),
-              duration: originalMembership
-                ? originalMembership.duration
-                : { value: 1, unit: "months" },
+              // Ensure we have a valid duration object
+              duration:
+                originalMembership && originalMembership.duration
+                  ? originalMembership.duration
+                  : { value: 1, unit: "months" },
               features: originalMembership ? originalMembership.features : [],
               classesIncluded: originalMembership
                 ? originalMembership.classesIncluded
@@ -274,13 +278,26 @@ const MemberDetail = () => {
             );
 
             // Update the member with the new custom membership
+            // Include startDate to trigger end date calculation on the server
+
+            // If startDate is null, set it to today
+            const startDateToUse = memberData.startDate || new Date();
+
+            // Update the member with both the new membership type and the start date
+            // This ensures the server has all the information needed to calculate the end date
             await axios.put(`/api/members/${res.data._id}`, {
               membershipType: membershipRes.data._id,
+              startDate: startDateToUse,
+              membershipStatus: "active", // Ensure the membership is active
             });
+
+            // Fetch the updated member to see if the end date was calculated
+            const updatedMember = await axios.get(
+              `/api/members/${res.data._id}`
+            );
 
             setAlert("Member created with custom membership plan", "success");
           } catch (membershipErr) {
-            console.error("Error creating custom membership:", membershipErr);
             setAlert(
               "Member created but failed to create custom membership plan. Please create it manually.",
               "warning"
@@ -294,7 +311,6 @@ const MemberDetail = () => {
 
       navigate(`/members/${res.data._id}`);
     } catch (err) {
-      console.error("Error submitting form:", err);
       setAlert(
         err.response?.data?.msg ||
           `Error ${isNew ? "creating" : "updating"} member`,

@@ -235,7 +235,7 @@ const AttendanceDetail = () => {
     if (errors.attendanceType) {
       setErrors({
         ...errors,
-        attendanceType: null
+        attendanceType: null)
     }
     
     // Try to load class sessions if the API exists

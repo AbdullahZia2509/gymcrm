@@ -133,12 +133,10 @@ const Dashboard = () => {
 
       // Only proceed if authenticated
       if (!authContext.isAuthenticated) {
-        console.log("Not authenticated, skipping dashboard data fetch");
         return;
       }
 
       try {
-        console.log("Fetching dashboard data...");
         setLoading(true);
 
         // Get today's date for class sessions
@@ -146,13 +144,11 @@ const Dashboard = () => {
 
         // Make API requests one at a time to avoid overwhelming the server
         const statsRes = await axios.get("/api/dashboard/stats");
-        console.log("Stats data received");
 
         // Only continue if component is still mounted
         if (!isMounted) return;
 
         const membersRes = await axios.get("/api/members/recent");
-        console.log("Recent members received");
 
         // Only continue if component is still mounted
         if (!isMounted) return;
@@ -160,7 +156,6 @@ const Dashboard = () => {
         const classesRes = await axios.get(
           `/api/classes/sessions/date/${todayClasses}`
         );
-        console.log("Today's classes received");
 
         // Final check if component is still mounted
         if (!isMounted) return;
@@ -193,9 +188,6 @@ const Dashboard = () => {
           capacity: session.class ? session.class.capacity : 0,
         }));
 
-        // Log the stats data for debugging
-        console.log("Dashboard stats from API:", stats);
-
         setData({
           stats: {
             activeMembers: stats.activeMembers || 0,
@@ -211,7 +203,6 @@ const Dashboard = () => {
           upcomingClasses,
         });
 
-        console.log("Dashboard data loaded successfully");
         setLoading(false);
       } catch (err) {
         console.error("Error fetching dashboard data:", err.message);

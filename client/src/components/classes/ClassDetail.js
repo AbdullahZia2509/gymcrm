@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
+import React, { useState, useEffect, useContext } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import axios from "axios";
 import {
   Box,
   Button,
@@ -27,18 +27,18 @@ import {
   Divider,
   CardHeader,
   FormControlLabel,
-  Switch
-} from '@mui/material';
+  Switch,
+} from "@mui/material";
 import {
   ArrowBack as ArrowBackIcon,
   Save as SaveIcon,
   Delete as DeleteIcon,
-  Event as EventIcon
-} from '@mui/icons-material';
-import AlertContext from '../../context/alert/alertContext';
-import AuthContext from '../../context/auth/authContext';
-import LoadingSpinner from '../layout/LoadingSpinner';
-import DeleteConfirmDialog from '../common/DeleteConfirmDialog';
+  Event as EventIcon,
+} from "@mui/icons-material";
+import AlertContext from "../../context/alert/alertContext";
+import AuthContext from "../../context/auth/authContext";
+import LoadingSpinner from "../layout/LoadingSpinner";
+import DeleteConfirmDialog from "../common/DeleteConfirmDialog";
 
 const ClassDetail = () => {
   const { id } = useParams();
@@ -48,23 +48,23 @@ const ClassDetail = () => {
   const { setAlert } = alertContext;
   const { user } = authContext;
 
-  const isNew = id === 'new';
-  const isEdit = window.location.pathname.includes('/edit');
+  const isNew = id === "new";
+  const isEdit = window.location.pathname.includes("/edit");
   const isReadOnly = !isNew && !isEdit;
 
   // Check if user has permission to modify classes
-  const canModify = user && (user.role === 'admin' || user.role === 'manager');
+  const canModify = user && (user.role === "admin" || user.role === "manager");
 
   const [classData, setClassData] = useState({
-    name: '',
-    description: '',
-    category: '',
+    name: "",
+    description: "",
+    category: "",
     duration: 60, // Changed from durationMinutes to match backend model
     capacity: 20,
-    difficulty: 'beginner', // Changed from difficultyLevel to match backend model
-    equipment: '',
-    image: '', // Changed from imageUrl to match backend model
-    isActive: true
+    difficulty: "beginner", // Changed from difficultyLevel to match backend model
+    equipment: "",
+    image: "", // Changed from imageUrl to match backend model
+    isActive: true,
   });
 
   const [instructors, setInstructors] = useState([]);
@@ -74,60 +74,59 @@ const ClassDetail = () => {
   const [deleteLoading, setDeleteLoading] = useState(false);
 
   useEffect(() => {
-    console.log('ClassDetail component mounted, id:', id, 'isNew:', isNew);
-    
     const init = async () => {
       try {
         setLoading(true);
-        
+
         // Ensure auth token is set in axios headers
         if (localStorage.token) {
-          axios.defaults.headers.common['x-auth-token'] = localStorage.token;
+          axios.defaults.headers.common["x-auth-token"] = localStorage.token;
         }
-        
+
         // Load instructors for the dropdown
-        const instructorsRes = await axios.get('/api/staff?role=trainer');
+        const instructorsRes = await axios.get("/api/staff?role=trainer");
         setInstructors(instructorsRes.data);
-        
+
         // If not a new class, load the class data
         if (!isNew && id) {
           await loadData();
         } else {
           // For new class, just set loading to false
-          console.log('Creating a new class, setting loading to false');
           setLoading(false);
         }
       } catch (err) {
-        console.error('Error in init:', err);
-        setAlert('Error initializing form. Please try again.', 'error');
+        console.error("Error in init:", err);
+        setAlert("Error initializing form. Please try again.", "error");
         setLoading(false);
       }
     };
-    
+
     init();
     // eslint-disable-next-line
   }, [id, isNew]);
 
   const loadData = async () => {
     try {
-      console.log('loadData called, id:', id);
       setLoading(true);
-      
+
       // Fetch the class data for an existing class
       const classRes = await axios.get(`/api/classes/${id}`);
       setClassData(classRes.data);
       setLoading(false);
     } catch (err) {
-      console.error('Error loading class data:', err);
-      
+      console.error("Error loading class data:", err);
+
       // If class not found, navigate back to classes list
       if (err.response?.status === 404) {
-        setAlert('Class not found', 'error');
-        navigate('/classes');
+        setAlert("Class not found", "error");
+        navigate("/classes");
       } else {
-        setAlert(err.response?.data?.msg || 'Error loading class data', 'error');
+        setAlert(
+          err.response?.data?.msg || "Error loading class data",
+          "error"
+        );
       }
-      
+
       // Always set loading to false, even on error
       setLoading(false);
     }
@@ -135,77 +134,78 @@ const ClassDetail = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
-    if (name === 'duration' || name === 'capacity') {
+
+    if (name === "duration" || name === "capacity") {
       // Convert to number for numeric fields
       setClassData({
         ...classData,
-        [name]: value === '' ? '' : Number(value)
+        [name]: value === "" ? "" : Number(value),
       });
     } else {
       setClassData({
         ...classData,
-        [name]: value
+        [name]: value,
       });
     }
-    
+
     // Clear error for this field if any
     if (errors[name]) {
       setErrors({
         ...errors,
-        [name]: ''
+        [name]: "",
       });
     }
   };
 
   const validateForm = () => {
     const newErrors = {};
-    
+
     if (!classData.name.trim()) {
-      newErrors.name = 'Class name is required';
+      newErrors.name = "Class name is required";
     }
-    
+
     if (!classData.category.trim()) {
-      newErrors.category = 'Category is required';
+      newErrors.category = "Category is required";
     }
-    
+
     if (!classData.duration) {
-      newErrors.duration = 'Duration is required';
+      newErrors.duration = "Duration is required";
     } else if (classData.duration <= 0) {
-      newErrors.duration = 'Duration must be greater than 0';
+      newErrors.duration = "Duration must be greater than 0";
     }
-    
+
     if (!classData.capacity) {
-      newErrors.capacity = 'Capacity is required';
+      newErrors.capacity = "Capacity is required";
     } else if (classData.capacity <= 0) {
-      newErrors.capacity = 'Capacity must be greater than 0';
+      newErrors.capacity = "Capacity must be greater than 0";
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
-    
+
     try {
       if (isNew) {
-        await axios.post('/api/classes', classData);
-        setAlert('Class created successfully', 'success');
+        await axios.post("/api/classes", classData);
+        setAlert("Class created successfully", "success");
       } else {
         await axios.put(`/api/classes/${id}`, classData);
-        setAlert('Class updated successfully', 'success');
+        setAlert("Class updated successfully", "success");
       }
-      
-      navigate('/classes');
+
+      navigate("/classes");
     } catch (err) {
       setAlert(
-        err.response?.data?.msg || `Error ${isNew ? 'creating' : 'updating'} class`,
-        'error'
+        err.response?.data?.msg ||
+          `Error ${isNew ? "creating" : "updating"} class`,
+        "error"
       );
     }
   };
@@ -222,13 +222,10 @@ const ClassDetail = () => {
     setDeleteLoading(true);
     try {
       await axios.delete(`/api/classes/${id}`);
-      setAlert('Class deleted successfully', 'success');
-      navigate('/classes');
+      setAlert("Class deleted successfully", "success");
+      navigate("/classes");
     } catch (err) {
-      setAlert(
-        err.response?.data?.msg || 'Error deleting class',
-        'error'
-      );
+      setAlert(err.response?.data?.msg || "Error deleting class", "error");
       setDeleteLoading(false);
       closeDeleteDialog();
     }
@@ -242,7 +239,7 @@ const ClassDetail = () => {
   if (!isReadOnly && !canModify) {
     return (
       <Container maxWidth="md">
-        <Box sx={{ mt: 5, textAlign: 'center' }}>
+        <Box sx={{ mt: 5, textAlign: "center" }}>
           <Typography variant="h5" color="error" gutterBottom>
             Access Denied
           </Typography>
@@ -274,9 +271,9 @@ const ClassDetail = () => {
         >
           Back to Classes
         </Button>
-        
+
         <Typography variant="h4" component="h1" gutterBottom>
-          {isNew ? 'Create Class' : isEdit ? 'Edit Class' : 'Class Details'}
+          {isNew ? "Create Class" : isEdit ? "Edit Class" : "Class Details"}
         </Typography>
       </Box>
 
@@ -286,7 +283,7 @@ const ClassDetail = () => {
             <Typography variant="h6" gutterBottom>
               Basic Information
             </Typography>
-            
+
             <Grid container spacing={3}>
               <Grid item xs={12} md={6}>
                 <TextField
@@ -301,7 +298,7 @@ const ClassDetail = () => {
                   required
                 />
               </Grid>
-              
+
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
@@ -315,7 +312,7 @@ const ClassDetail = () => {
                   required
                 />
               </Grid>
-              
+
               <Grid item xs={12} sm={6}>
                 <TextField
                   fullWidth
@@ -325,14 +322,16 @@ const ClassDetail = () => {
                   value={classData.duration}
                   onChange={handleChange}
                   InputProps={{
-                    endAdornment: <InputAdornment position="end">min</InputAdornment>,
+                    endAdornment: (
+                      <InputAdornment position="end">min</InputAdornment>
+                    ),
                   }}
                   error={!!errors.duration}
                   helperText={errors.duration}
                   disabled={isReadOnly}
                 />
               </Grid>
-              
+
               <Grid item xs={12} sm={6}>
                 <TextField
                   fullWidth
@@ -342,7 +341,7 @@ const ClassDetail = () => {
                   value={classData.capacity}
                   onChange={handleChange}
                   InputProps={{
-                    inputProps: { min: 1 }
+                    inputProps: { min: 1 },
                   }}
                   error={!!errors.capacity}
                   helperText={errors.capacity}
@@ -350,13 +349,13 @@ const ClassDetail = () => {
                   required
                 />
               </Grid>
-              
+
               <Grid item xs={12} md={6}>
                 <FormControl fullWidth>
                   <InputLabel>Instructor</InputLabel>
                   <Select
                     name="instructor"
-                    value={classData.instructor || ''}
+                    value={classData.instructor || ""}
                     onChange={handleChange}
                     label="Instructor"
                     disabled={isReadOnly}
@@ -372,7 +371,7 @@ const ClassDetail = () => {
                   </Select>
                 </FormControl>
               </Grid>
-              
+
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth>
                   <InputLabel>Difficulty Level</InputLabel>
@@ -390,7 +389,7 @@ const ClassDetail = () => {
                   </Select>
                 </FormControl>
               </Grid>
-              
+
               <Grid item xs={12}>
                 <TextField
                   fullWidth
@@ -403,7 +402,7 @@ const ClassDetail = () => {
                   disabled={isReadOnly}
                 />
               </Grid>
-              
+
               <Grid item xs={12}>
                 <TextField
                   fullWidth
@@ -414,7 +413,7 @@ const ClassDetail = () => {
                   disabled={isReadOnly}
                 />
               </Grid>
-              
+
               <Grid item xs={12}>
                 <TextField
                   fullWidth
@@ -425,7 +424,7 @@ const ClassDetail = () => {
                   disabled={isReadOnly}
                 />
               </Grid>
-              
+
               <Grid item xs={12}>
                 <FormControl fullWidth>
                   <InputLabel>Status</InputLabel>
@@ -446,7 +445,7 @@ const ClassDetail = () => {
         </Card>
 
         {!isReadOnly && (
-          <Box sx={{ mt: 3, display: 'flex', justifyContent: 'space-between' }}>
+          <Box sx={{ mt: 3, display: "flex", justifyContent: "space-between" }}>
             {!isNew && (
               <Button
                 variant="outlined"
@@ -464,12 +463,9 @@ const ClassDetail = () => {
                 color="primary"
                 sx={{ mr: 2 }}
               >
-                {isNew ? 'Create' : 'Update'} Class
+                {isNew ? "Create" : "Update"} Class
               </Button>
-              <Button
-                variant="outlined"
-                onClick={() => navigate('/classes')}
-              >
+              <Button variant="outlined" onClick={() => navigate("/classes")}>
                 Cancel
               </Button>
             </Box>
@@ -478,7 +474,7 @@ const ClassDetail = () => {
       </form>
 
       {!isNew && (
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
+        <Box sx={{ display: "flex", justifyContent: "space-between", mb: 3 }}>
           <Button
             component={Link}
             to={`/classes/${id}/sessions`}
@@ -488,7 +484,7 @@ const ClassDetail = () => {
           >
             Manage Sessions
           </Button>
-          
+
           {!isEdit && canModify && (
             <Box>
               <Button
@@ -521,25 +517,30 @@ const ClassDetail = () => {
         aria-labelledby="delete-dialog-title"
         aria-describedby="delete-dialog-description"
       >
-        <DialogTitle id="delete-dialog-title">
-          Delete Class
-        </DialogTitle>
+        <DialogTitle id="delete-dialog-title">Delete Class</DialogTitle>
         <DialogContent>
           <DialogContentText id="delete-dialog-description">
-            Are you sure you want to delete this class? This action cannot be undone.
-            Note that you cannot delete a class that has existing sessions.
+            Are you sure you want to delete this class? This action cannot be
+            undone. Note that you cannot delete a class that has existing
+            sessions.
           </DialogContentText>
         </DialogContent>
         <DialogActions>
           <Button onClick={closeDeleteDialog} color="primary">
             Cancel
           </Button>
-          <Button 
-            onClick={handleDelete} 
-            color="error" 
+          <Button
+            onClick={handleDelete}
+            color="error"
             variant="contained"
             disabled={deleteLoading}
-            startIcon={deleteLoading ? <CircularProgress size={20} color="inherit" /> : <DeleteIcon />}
+            startIcon={
+              deleteLoading ? (
+                <CircularProgress size={20} color="inherit" />
+              ) : (
+                <DeleteIcon />
+              )
+            }
           >
             Delete
           </Button>

@@ -18,45 +18,53 @@ router.get('/revenue', auth, tenant, async (req, res) => {
     console.log('Revenue Report Request:', { period, startDate, endDate, user: req.user.email, gymId: req.gymId });
     let start, end, groupBy;
     
+    // Check if we have any payments in the system (for debugging)
+    const totalPaymentsInSystem = await Payment.countDocuments({});
+    console.log(`Total payments in system: ${totalPaymentsInSystem}`);
+    
     // Set time period for the report
     if (period === 'daily') {
       // Default to last 30 days if no dates provided
-      start = startDate ? new Date(startDate) : moment().subtract(30, 'days').toDate();
-      // Set start time to beginning of day
-      start.setHours(0, 0, 0, 0);
+      start = startDate ? moment(startDate).startOf('day').toDate() : moment().subtract(30, 'days').startOf('day').toDate();
+      end = endDate ? moment(endDate).endOf('day').toDate() : moment().endOf('day').toDate();
       
-      end = endDate ? new Date(endDate) : new Date();
-      // Set end time to end of day
-      end.setHours(23, 59, 59, 999);
+      console.log('Daily period date range:', { 
+        start: start.toISOString(), 
+        end: end.toISOString() 
+      });
       
       groupBy = { $dateToString: { format: '%Y-%m-%d', date: '$paymentDate' } };
     } else if (period === 'weekly') {
       // Default to last 12 weeks if no dates provided
-      end = endDate ? new Date(endDate) : new Date();
-      // Set end time to end of day
-      end.setHours(23, 59, 59, 999);
+      start = startDate ? moment(startDate).startOf('day').toDate() : moment().subtract(12, 'weeks').startOf('day').toDate();
+      end = endDate ? moment(endDate).endOf('day').toDate() : moment().endOf('day').toDate();
       
-      groupBy = { $week: { $dateFromString: { dateString: { $dateToString: { format: '%Y-%m-%d', date: '$paymentDate' } } } } };
+      console.log('Weekly period date range:', { 
+        start: start.toISOString(), 
+        end: end.toISOString() 
+      });
+      
+      groupBy = { $dateToString: { format: '%Y-%U', date: '$paymentDate' } };
     } else if (period === 'monthly') {
       // Default to last 12 months if no dates provided
-      start = startDate ? new Date(startDate) : moment().subtract(12, 'months').toDate();
-      // Set start time to beginning of day
-      start.setHours(0, 0, 0, 0);
+      start = startDate ? moment(startDate).startOf('day').toDate() : moment().subtract(12, 'months').startOf('month').toDate();
+      end = endDate ? moment(endDate).endOf('day').toDate() : moment().endOf('day').toDate();
       
-      end = endDate ? new Date(endDate) : new Date();
-      // Set end time to end of day
-      end.setHours(23, 59, 59, 999);
+      console.log('Monthly period date range:', { 
+        start: start.toISOString(), 
+        end: end.toISOString() 
+      });
       
       groupBy = { $dateToString: { format: '%Y-%m', date: '$paymentDate' } };
     } else {
       // Default to monthly if period is invalid
-      start = startDate ? new Date(startDate) : moment().subtract(12, 'months').toDate();
-      // Set start time to beginning of day
-      start.setHours(0, 0, 0, 0);
+      start = startDate ? moment(startDate).startOf('day').toDate() : moment().subtract(12, 'months').startOf('month').toDate();
+      end = endDate ? moment(endDate).endOf('day').toDate() : moment().endOf('day').toDate();
       
-      end = endDate ? new Date(endDate) : new Date();
-      // Set end time to end of day
-      end.setHours(23, 59, 59, 999);
+      console.log('Default period (monthly) date range:', { 
+        start: start.toISOString(), 
+        end: end.toISOString() 
+      });
       
       groupBy = { $dateToString: { format: '%Y-%m', date: '$paymentDate' } };
     }
@@ -123,57 +131,39 @@ router.get('/revenue', auth, tenant, async (req, res) => {
         gymId: req.gymId
       });
       
-      // Debug: Check for any payments in the system regardless of date/gym
-      const allPayments = await Payment.find({}).limit(5);
-      console.log('Debug - Sample payments in system:', 
-        allPayments.map(p => ({
-          id: p._id,
-          date: p.paymentDate,
-          gym: p.gym,
-          amount: p.amount
-        }))
-      );
+      // Check how many payments match our criteria
+      const matchingPaymentsCount = await Payment.countDocuments(matchObj);
+      console.log(`Found ${matchingPaymentsCount} payments matching criteria`);
       
-      // Debug: Check for payments with this specific gym
-      const gymPayments = await Payment.find({gym: req.gymId}).limit(5);
-      console.log('Debug - Sample payments for this gym:', 
-        gymPayments.map(p => ({
-          id: p._id,
-          date: p.paymentDate,
-          dateType: typeof p.paymentDate,
-          amount: p.amount
-        }))
-      );
-      
-      // Debug: Test date comparison directly
-      if (gymPayments.length > 0) {
-        const samplePayment = gymPayments[0];
-        const paymentDate = samplePayment.paymentDate;
-        console.log('Date comparison debug:', {
-          paymentDate: paymentDate,
-          paymentDateISO: paymentDate.toISOString(),
-          startDate: start,
-          startDateISO: start.toISOString(),
-          endDate: end,
-          endDateISO: end.toISOString(),
-          isAfterStart: paymentDate >= start,
-          isBeforeEnd: paymentDate <= end,
-          isInRange: paymentDate >= start && paymentDate <= end
-        });
+      // If no payments found, try to diagnose the issue
+      if (matchingPaymentsCount === 0) {
+        // Check for payments with this gym
+        const gymPayments = await Payment.find({gym: req.gymId}).limit(5);
+        console.log('Sample payments for this gym:', 
+          gymPayments.map(p => ({
+            id: p._id,
+            date: new Date(p.paymentDate).toISOString(),
+            amount: p.amount,
+            status: p.paymentStatus
+          }))
+        );
+        
+        // Check payments within date range regardless of gym
+        const dateRangePayments = await Payment.find({
+          paymentDate: { $gte: start, $lte: end }
+        }).limit(5);
+        
+        console.log('Sample payments in date range (any gym):', 
+          dateRangePayments.map(p => ({
+            id: p._id,
+            date: new Date(p.paymentDate).toISOString(),
+            gym: p.gym,
+            amount: p.amount
+          }))
+        );
       }
       
-      // Add a debugging stage to see what documents are being processed
-      const debugResults = await Payment.find(matchObj).limit(10);
-      console.log('Matching documents before aggregation:', 
-        debugResults.map(p => ({
-          id: p._id,
-          date: p.paymentDate,
-          amount: p.amount,
-          formattedDate: p.paymentDate ? new Date(p.paymentDate).toISOString() : 'null'
-        }))
-      );
-      
-      // Use a simpler aggregation pipeline to debug
+      // Use appropriate aggregation based on period
       revenueData = await Payment.aggregate([
         {
           $match: matchObj
@@ -182,13 +172,17 @@ router.get('/revenue', auth, tenant, async (req, res) => {
           $project: {
             _id: 1,
             paymentDate: 1,
-            amount: 1,
-            month: { $dateToString: { format: '%Y-%m', date: '$paymentDate' } }
+            amount: { $ifNull: ['$amount', 0] }, // Handle null amounts
+            periodKey: period === 'monthly' 
+              ? { $dateToString: { format: '%Y-%m', date: '$paymentDate' } }
+              : (period === 'weekly' 
+                ? { $dateToString: { format: '%Y-%U', date: '$paymentDate' } }
+                : { $dateToString: { format: '%Y-%m-%d', date: '$paymentDate' } })
           }
         },
         {
           $group: {
-            _id: '$month',
+            _id: '$periodKey',
             totalRevenue: { $sum: '$amount' },
             count: { $sum: 1 }
           }
@@ -203,31 +197,22 @@ router.get('/revenue', auth, tenant, async (req, res) => {
       
       // Format the response for weekly/monthly
       revenueData = revenueData.map(item => {
-        let date;
-        if (period === 'weekly') {
-          // For weekly reports
-          if (item._id && typeof item._id === 'number') {
-            // If _id is just the week number
-            date = `Week ${item._id}`;
-          } else {
-            // Try to format as best we can
-            date = `Week ${item._id}`;
+        let date = item._id; // Default to the _id which should already be formatted correctly
+        
+        if (period === 'weekly' && item._id) {
+          // For weekly reports, format as Week YYYY-WW
+          const parts = item._id.split('-');
+          if (parts.length === 2) {
+            date = `Week ${parts[1]}, ${parts[0]}`;
           }
-        } else if (period === 'monthly') {
-          // For monthly reports
-          if (item._id && typeof item._id === 'string') {
-            // If _id is already a formatted string like '2025-07'
-            date = item._id;
-          } else if (item._id && item._id.year && item._id.month) {
-            // If _id has year and month properties
-            date = moment().year(item._id.year).month(item._id.month - 1).startOf('month').format('YYYY-MM');
-          } else {
-            // Fallback
-            date = String(item._id);
+        } else if (period === 'monthly' && item._id) {
+          // For monthly reports, format as Month YYYY
+          const parts = item._id.split('-');
+          if (parts.length === 2) {
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+            const monthIndex = parseInt(parts[1]) - 1;
+            date = `${monthNames[monthIndex]} ${parts[0]}`;
           }
-        } else {
-          // Daily or fallback
-          date = String(item._id);
         }
         
         return {

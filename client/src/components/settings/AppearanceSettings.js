@@ -71,8 +71,6 @@ const AppearanceSettings = ({ settings, updateSetting }) => {
       // Update theme immediately for better UX
       setThemeMode(newValue ? "dark" : "light");
 
-      console.log("Dark mode setting updated successfully in local storage");
-
       // Try to update the setting in the database if possible
       // This is optional and won't block the UI if it fails
       if (settings.find((s) => s.key === "darkMode")) {
