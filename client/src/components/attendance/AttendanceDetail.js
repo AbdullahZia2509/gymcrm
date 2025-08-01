@@ -28,6 +28,7 @@ import AuthContext from "../../context/auth/authContext";
 import AlertContext from "../../context/alert/alertContext";
 import LoadingSpinner from "../layout/LoadingSpinner";
 import DeleteConfirmDialog from "../common/DeleteConfirmDialog";
+import { format } from "date-fns";
 
 const AttendanceDetail = () => {
   const { id } = useParams();
@@ -214,10 +215,10 @@ const AttendanceDetail = () => {
   };
 
   const handleDateChange = (field, value) => {
+    console.log("value", new Date(value).toISOString().split("T")[0]);
     try {
       // Ensure value is a valid date or null
       const dateValue = value ? new Date(value) : null;
-
       setAttendance({
         ...attendance,
         [field]: dateValue,
@@ -559,9 +560,10 @@ const AttendanceDetail = () => {
                         label="Check-In Date *"
                         value={
                           attendance.checkInTime
-                            ? new Date(attendance.checkInTime)
-                                .toISOString()
-                                .split("T")[0]
+                            ? format(
+                                new Date(attendance.checkInTime),
+                                "yyyy-MM-dd"
+                              )
                             : ""
                         }
                         onChange={(e) => {
@@ -693,9 +695,10 @@ const AttendanceDetail = () => {
                         label="Check-Out Date"
                         value={
                           attendance.checkOutTime
-                            ? new Date(attendance.checkOutTime)
-                                .toISOString()
-                                .split("T")[0]
+                            ? format(
+                                new Date(attendance.checkOutTime),
+                                "yyyy-MM-dd"
+                              )
                             : ""
                         }
                         onChange={(e) => {
