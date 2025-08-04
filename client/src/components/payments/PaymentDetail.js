@@ -60,6 +60,7 @@ const PaymentDetail = () => {
     description: "",
     paymentFor: "membership",
     staff: "",
+    extendMembership: true, // Default to true for membership payments
   });
 
   const [members, setMembers] = useState([]);
@@ -278,6 +279,8 @@ const PaymentDetail = () => {
         // Ensure staff is properly set for personal training
         staff:
           payment.paymentFor === "personal_training" ? payment.staff : null,
+        // Only include extendMembership if payment is for membership
+        extendMembership: payment.paymentFor === "membership" ? payment.extendMembership : false,
       };
 
       if (isNew) {
@@ -599,6 +602,42 @@ const PaymentDetail = () => {
                   </Select>
                 </FormControl>
               </Grid>
+
+              {/* Extend Membership Checkbox - Only shown for membership payments */}
+              {payment.paymentFor === "membership" && (
+                <Grid item xs={12} md={6}>
+                  <FormControl component="fieldset" margin="normal">
+                    <Grid container alignItems="center">
+                      <Grid item>
+                        <input
+                          type="checkbox"
+                          id="extendMembership"
+                          checked={payment.extendMembership}
+                          onChange={(e) =>
+                            handleChange({
+                              target: {
+                                name: "extendMembership",
+                                value: e.target.checked,
+                              },
+                            })
+                          }
+                          style={{ marginRight: "8px" }}
+                        />
+                      </Grid>
+                      <Grid item>
+                        <label htmlFor="extendMembership">
+                          <Typography variant="body2">
+                            Extend membership end date
+                          </Typography>
+                        </label>
+                      </Grid>
+                    </Grid>
+                    <FormHelperText>
+                      If checked, this payment will extend the member's membership end date
+                    </FormHelperText>
+                  </FormControl>
+                </Grid>
+              )}
 
               {payment.paymentFor === "personal_training" && (
                 <Grid item xs={12} md={6}>

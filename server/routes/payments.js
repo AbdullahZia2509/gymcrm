@@ -149,36 +149,44 @@ router.post(
 
       await payment.save();
 
-      // If this is a membership payment with a membership ID, update the member's membership info
-      if (req.body.paymentFor === 'membership' && req.body.membership) {
+      // Only extend membership end date if this payment is specifically for membership renewal
+      if (req.body.paymentFor === 'membership' && req.body.membership && req.body.extendMembership === true) {
         const membership = await Membership.findOne({
           _id: req.body.membership,
           gym: req.gymId
         });
         
-        // Calculate new end date based on membership duration
-        let startDate = new Date();
-        if (member.endDate && member.endDate > startDate) {
-          // If current membership hasn't expired, extend from the end date
-          startDate = new Date(member.endDate);
+        if (membership) {
+          // Calculate new end date based on membership duration
+          let startDate = new Date();
+          if (member.endDate && member.endDate > startDate) {
+            // If current membership hasn't expired, extend from the end date
+            startDate = new Date(member.endDate);
+          }
+          
+          let endDate = new Date(startDate);
+          if (membership.duration.unit === 'days') {
+            endDate.setDate(endDate.getDate() + membership.duration.value);
+          } else if (membership.duration.unit === 'weeks') {
+            endDate.setDate(endDate.getDate() + (membership.duration.value * 7));
+          } else if (membership.duration.unit === 'months') {
+            endDate.setMonth(endDate.getMonth() + membership.duration.value);
+          } else if (membership.duration.unit === 'years') {
+            endDate.setFullYear(endDate.getFullYear() + membership.duration.value);
+          }
+          
+          // Update member
+          member.membershipType = req.body.membership;
+          member.membershipStatus = 'active';
+          member.endDate = endDate;
+          await member.save();
+          
+          console.log(`Extended membership for ${member.firstName} ${member.lastName} until ${endDate}`);
+        } else {
+          console.log('Membership not found, not extending end date');
         }
-        
-        let endDate = new Date(startDate);
-        if (membership.duration.unit === 'days') {
-          endDate.setDate(endDate.getDate() + membership.duration.value);
-        } else if (membership.duration.unit === 'weeks') {
-          endDate.setDate(endDate.getDate() + (membership.duration.value * 7));
-        } else if (membership.duration.unit === 'months') {
-          endDate.setMonth(endDate.getMonth() + membership.duration.value);
-        } else if (membership.duration.unit === 'years') {
-          endDate.setFullYear(endDate.getFullYear() + membership.duration.value);
-        }
-        
-        // Update member
-        member.membershipType = req.body.membership;
-        member.membershipStatus = 'active';
-        member.endDate = endDate;
-        await member.save();
+      } else if (req.body.paymentFor === 'membership') {
+        console.log('Payment is for membership but extendMembership flag not set, not extending end date');
       }
 
       const populatedPayment = await Payment.findById(payment._id)

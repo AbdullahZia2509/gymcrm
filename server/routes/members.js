@@ -5,6 +5,7 @@ const auth = require("../middleware/auth");
 const tenant = require("../middleware/tenant");
 const Member = require("../models/Member");
 const Membership = require("../models/Membership");
+const Payment = require("../models/Payment");
 const moment = require("moment");
 
 // @route   GET api/members
@@ -263,35 +264,16 @@ router.post(
           .json({ msg: "Member with this email already exists" });
       }
 
-      // Create new member data object
-      const memberData = { ...req.body };
-
-      // Handle membership type validation
-      if (memberData.membershipType) {
-        // Only validate if membershipType is not empty
-        if (memberData.membershipType.trim() !== "") {
-          try {
-            const membership = await Membership.findById(
-              memberData.membershipType
-            );
-            if (!membership) {
-              return res.status(404).json({ msg: "Membership type not found" });
-            }
-          } catch (err) {
-            // If there's an error with the ObjectId, remove the field
-            delete memberData.membershipType;
-          }
-        } else {
-          // If empty string, remove the field
-          delete memberData.membershipType;
-        }
-      }
-
-      // Calculate end date if membership type and start date are provided
-      if (req.body.membershipType && req.body.startDate) {
+      // Handle membership type validation and calculate end date first
+      if (req.body.membershipType && req.body.membershipType.trim() !== "") {
         try {
           const membership = await Membership.findById(req.body.membershipType);
-          if (membership) {
+          if (!membership) {
+            return res.status(404).json({ msg: "Membership type not found" });
+          }
+          
+          // Calculate end date if start date is provided
+          if (req.body.startDate) {
             const startDate = new Date(req.body.startDate);
             const endDate = new Date(startDate);
 
@@ -319,19 +301,112 @@ router.post(
                 break;
             }
 
+            // Add end date to request body
             req.body.endDate = endDate;
+            console.log("End date calculated:", endDate);
           }
         } catch (err) {
-          console.error("Error calculating end date:", err);
-          // If there's an error with the membership lookup, remove the field
+          console.error("Error with membership:", err);
+          // If there's an error with the ObjectId, remove the field
           delete req.body.membershipType;
         }
+      } else if (req.body.membershipType && req.body.membershipType.trim() === "") {
+        // If empty string, remove the field
+        delete req.body.membershipType;
       }
 
+      // Create member data object after all calculations are done
+      const memberData = { ...req.body };
+      
       // Add gym ID to member data
       memberData.gym = req.gymId;
       const member = new Member(memberData);
       await member.save();
+
+      // Generate invoice number
+      const generateInvoiceNumber = () => {
+        const prefix = 'INV';
+        const timestamp = Date.now().toString().slice(-8);
+        const randomDigits = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+        return `${prefix}-${timestamp}-${randomDigits}`;
+      };
+      
+      // Create payment entry based on membership information
+      try {
+        let paymentAmount = 0;
+        let membershipName = '';
+        let membershipId = null;
+        
+        // Case 1: Custom fee provided
+        if (memberData.customFee && parseFloat(memberData.customFee) > 0) {
+          paymentAmount = parseFloat(memberData.customFee);
+          membershipName = 'Custom Membership';
+          // If membership type is also provided, use it for reference
+          if (memberData.membershipType) {
+            membershipId = memberData.membershipType;
+            try {
+              const membership = await Membership.findById(memberData.membershipType);
+              if (membership) {
+                membershipName = membership.name + ' (Custom Fee)';
+              }
+            } catch (err) {
+              console.error('Error fetching membership details for custom fee:', err);
+            }
+          }
+        }
+        // Case 2: Membership fee provided
+        else if (memberData.membershipFee && parseFloat(memberData.membershipFee) > 0) {
+          paymentAmount = parseFloat(memberData.membershipFee);
+          membershipId = memberData.membershipType;
+          membershipName = 'Membership Fee';
+          
+          if (memberData.membershipType) {
+            try {
+              const membership = await Membership.findById(memberData.membershipType);
+              if (membership) {
+                membershipName = membership.name;
+              }
+            } catch (err) {
+              console.error('Error fetching membership details for membership fee:', err);
+            }
+          }
+        }
+        // Case 3: Membership type provided but no explicit fee
+        else if (memberData.membershipType) {
+          const membership = await Membership.findById(memberData.membershipType);
+          if (membership) {
+            paymentAmount = membership.price;
+            membershipId = memberData.membershipType;
+            membershipName = membership.name;
+          }
+        }
+        
+        // Create payment record if we have an amount to charge
+        if (paymentAmount > 0) {
+          const invoiceNumber = generateInvoiceNumber();
+          
+          const payment = new Payment({
+            gym: req.gymId,
+            member: member._id,
+            membership: membershipId,
+            amount: paymentAmount,
+            paymentDate: new Date(),
+            paymentMethod: memberData.paymentMethod || 'cash', // Default to cash if not specified
+            paymentStatus: 'completed',
+            invoiceNumber: invoiceNumber,
+            description: `Initial membership payment for ${member.firstName} ${member.lastName} - ${membershipName}`,
+            paymentFor: 'membership',
+            createdBy: req.user.id
+          });
+          
+          await payment.save();
+          console.log(`Payment record created for member ${member._id} with amount ${paymentAmount}, invoice: ${invoiceNumber}`);
+        }
+      } catch (err) {
+        console.error('Error creating payment record:', err);
+        // Continue even if payment creation fails
+        // We don't want to roll back the member creation if payment fails
+      }
 
       res.json(member);
     } catch (err) {
