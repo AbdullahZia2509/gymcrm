@@ -29,7 +29,6 @@ const authReducer = (state, action) => {
         loading: false,
       };
     case REGISTER_FAIL:
-    case AUTH_ERROR:
     case LOGIN_FAIL:
     case LOGOUT:
       localStorage.removeItem("token");
@@ -39,6 +38,15 @@ const authReducer = (state, action) => {
         isAuthenticated: false,
         loading: false,
         user: null,
+        error: action.payload,
+      };
+    case AUTH_ERROR:
+      // Don't remove token on first auth error - this allows retry
+      // Only set authentication state to false
+      return {
+        ...state,
+        isAuthenticated: false,
+        loading: false,
         error: action.payload,
       };
     case CLEAR_ERRORS:

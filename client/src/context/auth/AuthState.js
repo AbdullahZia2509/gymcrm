@@ -35,19 +35,31 @@ const AuthState = (props) => {
 
   // Load User
   const loadUser = async () => {
+    // Only proceed if we have a token
     if (localStorage.token) {
       setAuthToken(localStorage.token);
-    }
-    try {
-      const res = await axios.get("/api/auth");
-      dispatch({
-        type: USER_LOADED,
-        payload: res.data,
-      });
-    } catch (err) {
-      dispatch({
-        type: AUTH_ERROR,
-      });
+      
+      try {
+        const res = await axios.get("/api/auth");
+        dispatch({
+          type: USER_LOADED,
+          payload: res.data,
+        });
+      } catch (err) {
+        console.log('Auth error:', err.response?.status, err.response?.data?.msg || err.message);
+        
+        // Only dispatch AUTH_ERROR if it's a 401 Unauthorized
+        // This prevents token removal for network errors or server issues
+        if (err.response && (err.response.status === 401 || err.response.status === 403)) {
+          dispatch({
+            type: AUTH_ERROR,
+            payload: err.response.data.msg || 'Authentication failed',
+          });
+        } else {
+          // For other errors (network, 500, etc.), keep user logged in but mark as error
+          console.error('Non-auth error in loadUser:', err);
+        }
+      }
     }
   };
 
